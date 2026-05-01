@@ -1,0 +1,40 @@
+Item,Result,Documented,Where To Check,Notes/Reference
+Crawlers Can Understand Content,,,,
+The desired canonical version of the site has been specified in Google Search Console.,No Issues,No,Google Search Console or other tools like Ahrefs and Semrush.,Canonical URLs in Search Console
+Title tags follow best practices.,Issues To Fix,No,Ahrefs / Screaming Frog Crawl / Semrush.,"A tool might warn you if it thinks your title tags are too long or too short, but please note that title tag length is not a ranking factor in Google search as long as you follow title tag best practices.
+Title Tag Optimization"
+Title tags are not duplicated across multiple pages.,Incomplete,No,Ahrefs / Screaming Frog Crawl / Semrush.,Screaming Frog Title Tag Documentation
+Titles tags are not missing from pages.,Incomplete,No,Ahrefs / Screaming Frog Crawl / Semrush.,"Ahrefs ""Title Tag Missing Or Empty"" Documentation
+Screaming Frog Title Tag Documentation"
+Pages don't have multiple title tags.,Incomplete,No,Ahrefs / Screaming Frog Crawl / Semrush.,"Ahrefs ""Multiple Title Tags"" Documentation
+ Multiple Title Tags Split Test (Semrush)"
+"Pages don't have issues with H1 tags: missing, duplicate, too long, multiple H1s.",Incomplete,No,Ahrefs / Screaming Frog Crawl / Semrush.,Screaming Frog H1 Documentation
+"Pages don't have issues with H2 tags: missing, duplicate, too long.",Incomplete,No,Ahrefs / Screaming Frog Crawl / Semrush.,Screaming Frog H2 Documentation
+There are not multiple pages targeting the same keywords.,Incomplete,No,Manual testing / KW Research (a keyword ranking export in a tool like Semrush can help) / Plugins such as Yoast.,"This is all on you however you choose to implement and track it. Plugins like Yoast can help with tracking. Large websites may not be able to avoid some of this, but you should at least ensure your high-priority keywords don't suffer from cannibalization.
+How To Identify & Eliminate Keyword Cannibalization To Boost Your SEO"
+URL structures follow best practices.,Incomplete,No,Ahrefs / Screaming Frog Crawl / Semrush.,"Google's documentation on URL best practices 
+Screaming Frog documentation on URL structure 
+The Ultimate Guide For An SEO-Friendly URL Structure"
+Image file names are descriptive.,Incomplete,No,Screaming Frog Crawl and check the URLs of images.,Google's image SEO best practices
+Images have alt attributes.,Incomplete,No,Screaming Frog Crawl or Chrome DevTools.,How To Find Missing Alt Attributes
+Duplicate Content,,,,
+Site copy is original and not scraped/duplicated from other websites.,Incomplete,No,Plagiarism-check tools like Copyscape.,"Remember that when an SEO tool checks for ""duplicate content,"" it might only be checking your internal pages. Make sure you run a plagiarism checker, especially if the website has old blog posts or UGC that you did not have control over."
+Make sure HTTP:// site version directs to HTTPS:// version.,Incomplete,No,"Varvy Redirect Mapper, Screaming Frog, Semrush, or another crawling tool that reports on redirects.","Even when your site runs on HTTPS, circumstances like user error can cause devices to try and access an HTTP version. There might be errors in redirecting some pages.
+SSL Redirection Guide"
+"Different versions of the same URL (parameters such as UTM codes, trailing slashes, etc.) are treated properly.",Incomplete,No,Screaming Frog Crawl.,"Note that Google crawlers are much better at understanding URL paramaters than they used to be, leading to Google deprecating the URL parameters tool in Search Console, so this may not be a critical issue. 
+Google's Canonical Documentation"
+Your desktop site version should be rel=canonical and mobile site version should be rel=alternate.,Incomplete,No,Screaming Frog Crawl / Manual testing.,Google's Mobile First Best Practices
+Canonical tags are used to associate duplicate content.,Incomplete,No,Ahrefs / Screaming Frog Crawl / Semrush.,"When To Canonicalize, Noindex, Or Do Nothing With Similar Content"
+Other domains or subdomains are not causing duplicate content.,Incomplete,No,Ahrefs / Screaming Frog Crawl / Semrush.,How To Solve Duplicate Content Issues: The Complete Guide
+Internal Links,,,,
+Make sure internal links don't have rel=nofollow attribute.,Incomplete,No,Ahrefs / Screaming Frog Crawl / Semrush.,"Google: Nofollow Is Not A Substitute For Noindex 
+Needing a nofollow tag on an internal link is quite rare. If you want Google not to count an internal link, it's better to noindex the destination page instead."
+Internal linking reflects the priority of content.,Incomplete,No,Ahrefs / Screaming Frog Crawl / Semrush.,"This has a little bit of overlap with a content audit, which is beyond the scope of this worksheet, but internal linking is good to address here, too. 
+Internal Linking Is Super Critical For SEO
+Internal Links As A Ranking Factor"
+Internal links are crawlable and use best practices.,Incomplete,No,Ahrefs / Screaming Frog Crawl / Semrush.,Google's documentation on internal links best practices
+Important content is ≤4 clicks from the homepage.,Incomplete,No,"Manual testing. You can use your chosen crawling tool to help, but identify the important pages and test how users navigate to them.",How To Improve Your Website Navigation: 7 Essential Best Practices
+There are fewer than ~300 links on important pages.,Incomplete,No,Screaming Frog Crawl / Manual testing.,"Neither Google nor Bing state an explicit limit on the number of links, however Google's John Mueller has cautioned that too many internal links can potentially make a website more confusing for Google to interpret. Both Google and Bing suggest that the number of links on a page should make sense, and be ""reasonable."" That changes depending on the use case for a site/page, but multiple hundreds of links is probably too many."
+Structured Data,,,,
+Structured data doesn't have validation errors.,Incomplete,No,Google Search Console / Structured Data Testing Tool.,How To Test And Validate Structured Data
+Schema markup matches the content of the page to avoid being considered misleading/spam.,Incomplete,No,Manual testing.,Don't tag your content as something it's not.

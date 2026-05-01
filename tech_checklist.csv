@@ -1,0 +1,112 @@
+Item,Result,Documented,Where To Check,Notes/Reference
+General,,,,
+Website or individual pages are not down or timing out.,No Issues,No,"Automated tools like Pingdom, Screaming Frog Crawl, Ahrefs, or manual testing.","If you run a tool and it reports a timeout, check the page in your browser. If it's not timing out for you, then you may need to whitelist the tool's IP addresses with your host (you can usually find IP ranges on the tool's website). 
+If the issue does persist in a browser, you may need technical support with your server from your host."
+Make sure website is submitted in Google Search Console and verified.,Issues To Fix,No,Google Search Console.,A Complete Google Search Console Guide For SEO Pros
+Website and important pages are indexed.,Incomplete,No,URL Inspection Tool in Google Search Console or Screaming Frog Crawl.,10 Steps To Boost Your Site’s Crawlability And Indexability
+Robots.txt,,,,
+Robots.txt is not blocking content that should be crawled / indexed.,Incomplete,No,Google Search Console / manual testing.,6 Common Robots.txt Issues & And How To Fix Them
+XML Sitemap,,,,
+XML Sitemaps are submitted to Google Search Console.,Incomplete,No,Google Search Console.,"Google's documentation on sitemaps
+10 Best Sitemap Generators For Faster, More Productive Crawls"
+XML Sitemap includes valid URLs on the site.,Incomplete,No,Google Search Console / Screaming Frog Crawl / Semrush / Ahrefs.,5 Sitemap Examples That Showcase Best Practices In Action
+All URLs in the XML sitemap resolve 200 OK.,Incomplete,No,Screaming Frog Sitemap Crawl / Semrush / Ahrefs.,How To Audit XML Sitemaps Using The SEO Spider
+Sitemap doesn't contain functioning URLs that you want to keep out of the index.,Incomplete,No,Screaming Frog Sitemap Crawl and either a sitemap plugin for your CMS or a standalone sitemap generator (The actual removal process will depend on what tool you used to create your sitemap.),"This is something you'll want to pay attention to if, for example, you run an ecommerce site with different pages for different variations of the same product. Other pages you may not want in the index include ad landing pages, orphan pages, etc. Any pages you are feeding into Google Search Console via the XML feed but are not crawlable / findable via the site navigation. ""I've found cleaning up the XML sitemaps not to include these pages to be a game changer."" - Loren Baker"
+Current XML Sitemap is correctly referenced in robots.txt file.,Incomplete,No,Manual testing.,6 Common Robots.txt Issues & And How To Fix Them
+"Sitemaps are not larger than 50 MB or 50,000 URLs.",Incomplete,No,Google Search Console / manual testing.,Google documentation on sitemap size limits
+Crawl Optimization,,,,
+Meta directives have been set correctly to include/exclude content from the index.,Incomplete,No,Screaming Frog Crawl.,Google's documentation on using meta tags to control crawling and indexing
+"Site implements pagination, load more, and infinite scroll correctly.",Incomplete,No,Screaming Frog Crawl.,"Google documentation on pagination
+ SEO-Friendly Pagination
+Ask An SEO: How Do I Deal With Large-Scale Pagination Issues?
+rel=next and rel=prev are no longer supported. Make sure you've updated how your site handles pagination for internal search results pages, forums, etc."
+Faceted navigation URLs have a noindex tag or are placed in a separate directory.,Incomplete,No,Screaming Frog Crawl / Site: search.,"Google's documentation about faceted navigation 
+SEO At Scale: What Large Ecommerce Sites Do Differently
+If you have internal search filters, noindex filtered results pages."
+JavaScript-based websites are rendered properly in Google Search Console.,Incomplete,No,Google Search Console URL Inspection Tool.,Google's URL Inspection Tool documentation
+Debug JavaScript using DevTools performance tool and optimize for rendering. ,Incomplete,No,Chrome DevTools Performance Insights Panel.,"Rendering Performance 
+Layout Issues 
+Browser Reflow"
+Check for JavaScript errors.,Incomplete,No,Chrome DevTools Console.,Debug Javascript with DevTools
+Iframes are not used to display important content.,Incomplete,No,Screaming Frog Crawl / Manual testing.,You need to be careful with third-party embeds and follow best practices when using them.
+Remove any outdated Flash players and broken embeds.,Incomplete,No,Manual testing.,Google Will Ignore Flash Content on Websites
+"Site is serving the same information to all user-agents, including Googlebot.",Incomplete,No,Screaming Frog Crawl / manual testing / Google Search Console.,"""Cloaking"" is against Google's spam policies. However, this situation is not always considered harmful cloaking."
+"Mobile URLs display the correct content, regardless of user-agent or device.",Incomplete,No,Manual testing.,14 Mobile Optimization Best Practices You Need To Know
+Pages returning 404 status codes redirect to relevant pages if applicable.,Incomplete,No,Screaming Frog Crawl.,"When pages move, you often end up with 404 errors. Redirect to relevant pages if they exist. Google's documentation on 404s says that 404s aren't inherently problematic, but you want to make sure you're not serving errors when you should be serving content."
+Pages that you wish to remove from the index serve 410 HTTP status code.,Incomplete,No,Manual testing.,"Technically, Google treats 404s and 410s the same way, and you should see them disappear after a while. Do not block 404s in your robots.txt."
+Internal links resolve 200 OK.,Incomplete,No,Screaming Frog Crawl.,How To Find And Fix Broken Links
+The site has no redirect chains.,Incomplete,No,Screaming Frog Crawl.,"Redirect chains don't technically hurt you, but aim for less than five redirects, per Google's John Mueller."
+"Site does not use JavaScript redirection. (For headless sites, implement carefully.)",Incomplete,No,Manual testing.,"This is a bit of a grey area. Google strongly prefers traditional server-side redirects and advises against JavaScript redirects. However, you can use them for some situations, like headless architecture, if you go about it carefully."
+Site does not use HTML meta refresh tags.,Incomplete,No,Screaming Frog Crawl.,"Google doesn't recommend using meta refresh tags as they can be confusing, and are not supported by all browsers."
+Performance,,,,How To Use Python To Monitor & Measure Website Performance
+Core Web Vitals: First Contentful Paint (FCP) scores green / good.,Incomplete,No,"Google Search Console Core Web Vitals Report, PageSpeed Insights, Chrome UX Report / Chrome DevTools Lighthouse.","Core Web Vitals explained
+FCP explained
+Core Web Vitals in GSC 
+How To Test Your Website Speed 
+In Lighthouse, go to the Performance tab and click the Web Vitals checkbox."
+Core Web Vitals: Largest Contentful Paint (LCP) scores green / good.,Incomplete,No,"Google Search Console Core Web Vitals Report, PageSpeed Insights, Chrome UX Report / Chrome DevTools Lighthouse.", LCP explained
+Core Web Vitals: Cumulative Layout Shift (CLS) scores green / good.,Incomplete,No,"Google Search Console Core Web Vitals Report, PageSpeed Insights, Chrome UX Report / Chrome DevTools Lighthouse.",CLS explained
+Core Web Vitals: Interaction To Next Paint (INP) scores green / good.,Incomplete,No,"Until March 2024, you can continue using First Input Delay (FID), but then INP will replace it.
+
+Google Search Console Core Web Vitals Report, PageSpeed Insights, Chrome UX Report / Chrome DevTools Lighthouse.","New Core Web Vital: INP 
+INP Explained"
+"Core Web Vitals: First Input Delay (FID) -- If still relevant (before March 2024).
+
+First Input Delay (FID) will be REPLACED by INP March 2024.",Incomplete,No,"After March 2024, you can ignore/delete this row.
+
+Google Search Console Core Web Vitals Report, PageSpeed Insights, Chrome UX Report / Chrome DevTools Lighthouse.",FID Explained
+Site does not have mixed content issues caused by insecure connections.,Incomplete,No,Screaming Frog Crawl / manual testing.,"What is mixed content?
+Fixing mixed content"
+Site uses HTTP/2.,Incomplete,No,KeyCDN Tools.,"Introduction To HTTP/2 
+What Is HTTP/2?"
+Gzip compression is enabled.,Incomplete,No,Check with your web server.,Gzip compression guide
+Caching is enabled where possible.,Incomplete,No,Google PageSpeed Insights Tool.,"Browser caching documentation 
+If you use WordPress, you can enable caching easily with plugins."
+Code is minified where it can be.,Incomplete,No,Google PageSpeed Insights Tool.,"Minification documentation 
+Google's PageSpeed Module can do this automatically."
+Reduce excessive requests for external resources where possible. Make sure requests don't time out.,Incomplete,No,Chrome DevTools Lighthouse Network Waterfall report or GTMetrix Waterfall report.,"Understanding page loading behavior with a waterfall chart 
+Waterfall chart overview"
+Check for broken images.,Incomplete,No,Tool like Semrush or Serpstat.,This one is pretty simple – remove or replace!
+Images are responsive and in the correct format (webp).,Incomplete,No,Google PageSpeed Insights.,Google's documentation on webp compression
+"Image size: Images are compressed, and you use lazy loading correctly.",Incomplete,No,Google PageSpeed Insights.,Using The PageSpeed Insights API With Screaming Frog
+Accessibility,,,"Lighthouse in Chrome DevTools runs an accessibility audit which is a great first step, but most accessibility functions will require hands-on testing.",
+Pages have non-JavaScript versions available.,Incomplete,No,Manual test with the noscript element / Chrome DevTools.,"Accessible JavaScript 
+You can use Lighthouse to view pages without JavaScript and ensure that they load and display correctly."
+JavaScript uses accessibility standards.,Incomplete,No,Manual test with Chrome DevTools Lighthouse.,JavaScript accessibility best practices
+Pages are mobile-friendly.,Incomplete,No,"Google Search Console Mobile-Friendly Test, Chrome DevTools Device Toolbar.",14 Mobile Optimization Best Practices You Need To Know
+Clickable elements are not too close together.,Incomplete,No,Google Search Console Mobile-Friendly Test.,What Is User Experience? How Design Matters To SEO
+Navigation should be usable without a mouse.,Incomplete,No,Manual test or BrowserStack.,"Keyboard Access Fundamentals 
+Semantic HTML"
+Site uses ARIA landmarks.,Incomplete,No,Manual test with Chrome DevTools Lighthouse.,ARIA landmarks principles and examples
+Pages use skip-to-content / skip navigation links.,Incomplete,No,Manual test (Press tab key upon loading page; skip link should be the first link that appears.),Skip Navigation Links Best Practices
+Video and audio have captions and transcripts.,Incomplete,No,Manual testing.,"Even if a video has subtitles, you should make a plain text transcript available on the page."
+Video and audio have user-accessible controls.,Incomplete,No,Manual testing.,"Video and audio content controls 
+It's easy to overlook background audio and video on a website, but it's critical that users can stop and control all multimedia elements of a website."
+Site does not use strobing or flashing lights.,Incomplete,No,Manual testing.,Flashing lights standards to avoid seizures
+Users can stop automatic scrolling.,Incomplete,No,Manual testing.,"Automatic scrolling standards
+The standards state that users should be able to pause automatic scrolling unless it's part of a ""necessary"" activity, so there is a little bit of interpretation required here."
+"Users can zoom in on the page, and text is accessible.",Incomplete,No,Manual testing.,"Test your website in browsers to see how it responds to being zoomed in. If you want to provide additional functionality, you can give users control over the size of text. 
+Use simple, familiar fonts for text and relative font sizes in CSS. 
+Making web text more accessible
+ Typeface and font accessibility"
+Site language should be identifiable in code.,Incomplete,No,Manual testing (Check HTML lang attributes.),"This is especially helpful if you have different language versions of pages.
+For best accessibility with screen readers, WCAG recommends using the HTML lang attribute."
+Input errors return descriptive results to the user.,Incomplete,No,Manual testing.,"If a user doesn't provide the correct input, make sure to describe what the problem is and what's expected of them in order to provide a valid input."
+Color contrast meets WCAG guidelines.,Incomplete,No,"Tools like WebAIM, Accessible Web Contrast Checkers, or Chrome DevTools Lighthouse.","WCAG Contrast Checker 
+WCAG Minimum Contrast
+ WCAG Non-Text Contrast 
+WCAG Enhanced Contrast"
+Penalty Risk,,,,
+The site has not been hacked.,Incomplete,No,Google Search Console Messages / manual testing.,"How to test whether your site has been hacked
+Finding help for hacked websites"
+The site is not stuffing keywords.,Incomplete,No,Manual testing.,"Google's guidelines on keyword stuffing
+Keyword Stuffing As A Negative Ranking Factor"
+The site's backlink profile is not a risk.,Incomplete,No,"Perform a backlink audit. Many SEO suites such as Semrush, Moz, Ahrefs, etc. can do this for you. Or you can do it yourself if you're familiar with Python.","A full backlink audit is beyond the scope of this worksheet, but the good news is that it should be easy to tell whether a website's backlink profile is a risk. Generally, this is only the case if you or the representatives of the website have directly engaged in link building tactics that are against Google's guidelines. 
+The Dark Side Of Link Building 
+Google's John Mueller On Negative SEO And Disavow 
+Backlink Analysis With Python "
+The site is not cloaking content.,Incomplete,No,"Screaming Frog Crawl / Google Search Console ""Security Issues"" Tool.","If your site is hacked, cloaking is one of the tactics hackers might use to make their efforts more difficult to detect and defeat.
+Google's documentation on cloaking
+Identifying And Fixing A Cloaking Hack"
+Site uses Schema appropriately to avoid structured data penalties.,Incomplete,No,Schema checkers may not identify these issues. You should check this manually.,Structured Data Google Penalties
+ ,,,,
