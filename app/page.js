@@ -214,6 +214,7 @@ export default function Home() {
 
   const aggregateAndFinish = (resultsArr, sitemapData) => {
     // Determine overall health and metrics across all pages
+    let aiDirectivesOverride = false;
     let totalInp = 0;
     let totalLcp = 0;
     let pagesWithH1Error = 0;
@@ -250,6 +251,11 @@ export default function Home() {
         non2xxPages.push({ url: res.url, status: res.status });
       }
       statusCodes[res.status] = (statusCodes[res.status] || 0) + 1;
+      
+      // Check for AI overrides
+      if (res.meta?.aiDirectives?.hasNoaiHeader || res.meta?.aiDirectives?.hasNoaiMeta) {
+         aiDirectivesOverride = true;
+      }
       
       if (res.availabilityAnalysis?.rawData) {
         const rt = res.availabilityAnalysis.rawData.responseTime;
@@ -317,7 +323,8 @@ export default function Home() {
       robots: domainRobots,
       llms: domainLlms,
       pagesWith404,
-      availabilityAnalysis: worstAvailability || { status: "Healthy", root_cause_analysis: "All pages responded successfully.", user_action: "No action required." }
+      availabilityAnalysis: worstAvailability || { status: "Healthy", root_cause_analysis: "All pages responded successfully.", user_action: "No action required." },
+      aiDirectivesOverride
     });
 
     setStep(5);
@@ -496,7 +503,38 @@ export default function Home() {
                     desc = "Google Search Console verification required.";
                   }
                 }
-                if (check.id === "r1" && !aggregatedResults.robots?.aiAllowed) { pass = false; desc = "Robots.txt contains restrictive AI directives."; }
+                if (check.id === "r1") {
+                   if (!aggregatedResults.robots?.present) {
+                      pass = false;
+                      desc = "robots.txt file is missing or inaccessible.";
+                   } else if (aggregatedResults.robots?.checks && aggregatedResults.robots.checks.length > 0) {
+                      const criticalIssues = aggregatedResults.robots.checks.filter(c => c.status === 'Fail');
+                      const warningIssues = aggregatedResults.robots.checks.filter(c => c.status === 'Warning');
+                      if (criticalIssues.length > 0) {
+                         pass = false;
+                         desc = `${criticalIssues.length} critical errors and ${warningIssues.length} warnings found in robots.txt.`;
+                      } else if (warningIssues.length > 0) {
+                         pass = false; 
+                         desc = `${warningIssues.length} warnings found in robots.txt.`;
+                      } else {
+                         pass = true;
+                         desc = "Robots.txt is present and passed all checks perfectly.";
+                      }
+                   } else {
+                      pass = true;
+                      desc = "Robots.txt is present and configured correctly.";
+                   }
+                }
+                if (check.id === "r2") {
+                   const aiGov = aggregatedResults.robots?.aiGovernance;
+                   if (aiGov) {
+                      pass = true;
+                      desc = `Strategy: ${aiGov.strategy}. Click for detailed bot governance breakdown.`;
+                   } else {
+                      pass = false;
+                      desc = "AI Governance data missing or robots.txt not found.";
+                   }
+                }
                 if (check.id === "x5" && !aggregatedResults.robots?.sitemapUrl) { pass = false; desc = "Sitemap not found in robots.txt"; }
                 if (check.id === "c17" && !aggregatedResults.llms?.found) { pass = false; desc = "/llms.txt is missing from the root."; }
                 if (check.id === "c18" && aggregatedResults.h1ErrorRate > 0.2) { pass = false; desc = `${Math.round(aggregatedResults.h1ErrorRate * 100)}% of pages have H1 hierarchy issues.`; }
@@ -641,6 +679,103 @@ export default function Home() {
                             )}
                           </div>
                         )}
+                      </div>
+                    )}
+                    {check.id === "r1" && aggregatedResults.robots?.checks?.length > 0 && (
+                      <div style={{ background: "rgba(0,0,0,0.2)", padding: "1rem", borderRadius: "6px", width: "100%", marginTop: "1rem", borderLeft: "3px solid #3b82f6" }}>
+                        <strong style={{ display: "block", marginBottom: "1rem", color: "#60a5fa", fontSize: "1.1rem" }}>Robots.txt Analysis Findings:</strong>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                          {aggregatedResults.robots.checks.map((rCheck, idx) => (
+                            <div key={idx} style={{ 
+                               background: "rgba(255,255,255,0.03)", 
+                               padding: "1rem", 
+                               borderRadius: "6px", 
+                               borderLeft: rCheck.status === 'Fail' ? "3px solid var(--danger)" : rCheck.status === 'Warning' ? "3px solid var(--warning)" : "3px solid var(--success)" 
+                            }}>
+                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                                  <strong style={{ color: "#f8fafc", fontSize: "0.95rem" }}>{rCheck.name}</strong>
+                                  <span style={{ 
+                                     fontSize: "0.75rem", 
+                                     fontWeight: "bold", 
+                                     padding: "0.2rem 0.5rem", 
+                                     borderRadius: "4px",
+                                     background: rCheck.status === 'Fail' ? "rgba(239,68,68,0.2)" : rCheck.status === 'Warning' ? "rgba(245,158,11,0.2)" : "rgba(16,185,129,0.2)",
+                                     color: rCheck.status === 'Fail' ? "#fca5a5" : rCheck.status === 'Warning' ? "#fcd34d" : "#6ee7b7" 
+                                  }}>
+                                    {rCheck.status.toUpperCase()}
+                                  </span>
+                               </div>
+                               <p style={{ fontSize: "0.85rem", color: "#cbd5e1", margin: "0 0 0.5rem 0", lineHeight: "1.5" }}>
+                                  <strong>Analysis:</strong> {rCheck.analysis}
+                               </p>
+                               {rCheck.actionable_steps && rCheck.status !== "Pass" && (
+                                  <p style={{ fontSize: "0.85rem", color: "#94a3b8", margin: 0, lineHeight: "1.5" }}>
+                                    <strong style={{ color: rCheck.status === 'Fail' ? "#fca5a5" : "#fcd34d" }}>Action:</strong> {rCheck.actionable_steps}
+                                  </p>
+                               )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {check.id === "r2" && aggregatedResults.robots?.aiGovernance && (
+                      <div style={{ background: "rgba(0,0,0,0.2)", padding: "1rem", borderRadius: "6px", width: "100%", marginTop: "1rem", borderLeft: "3px solid #8b5cf6" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                           <strong style={{ color: "#a78bfa", fontSize: "1.1rem" }}>AI Bot Governance & Training Permissions:</strong>
+                           <span style={{ background: "rgba(139,92,246,0.2)", color: "#c4b5fd", padding: "0.3rem 0.6rem", borderRadius: "4px", fontSize: "0.8rem", fontWeight: "bold" }}>
+                              STRATEGY: {aggregatedResults.robots.aiGovernance.strategy.toUpperCase()}
+                           </span>
+                        </div>
+                        
+                        <p style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "1rem", lineHeight: "1.5" }}>
+                           <strong>Interpretation:</strong> 
+                           {aggregatedResults.robots.aiGovernance.strategy === 'AI-Open' && " The site allows all AI bots, permitting both search retrieval and model training."}
+                           {aggregatedResults.robots.aiGovernance.strategy === 'AI-Restrictive' && " The site explicitly opts out of AI training crawlers (protecting IP) while remaining accessible to search/retrieval engines. This is a valid, modern publisher choice."}
+                           {aggregatedResults.robots.aiGovernance.strategy === 'AI-Closed' && " The site blocks both training and search/retrieval AI bots."}
+                           {aggregatedResults.robots.aiGovernance.strategy.includes('Undefined') && " No explicit AI bot restrictions were found. The site defaults to allowing all bots implicitly."}
+                        </p>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                           {/* Training Bots */}
+                           <div style={{ background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "6px" }}>
+                              <strong style={{ display: "block", marginBottom: "0.5rem", color: "#94a3b8", fontSize: "0.85rem", textTransform: "uppercase" }}>Model Training Bots</strong>
+                              <p style={{ fontSize: "0.75rem", color: "#cbd5e1", marginBottom: "0.5rem", fontStyle: "italic" }}>Bots that scrape data to train AI models (e.g., ChatGPT, Gemini).</p>
+                              {Object.entries(aggregatedResults.robots.aiGovernance.bots)
+                                .filter(([_, b]) => b.type === 'Training')
+                                .map(([name, b]) => (
+                                 <div key={name} style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem", fontSize: "0.85rem" }}>
+                                    <span style={{ color: "#f8fafc" }}>{name}</span>
+                                    <span style={{ color: b.status === 'ALLOWED' ? "#10b981" : "#ef4444", fontWeight: "bold" }}>
+                                       {b.status} <span style={{fontSize: "0.7rem", fontWeight: "normal", color: "#64748b"}}>{b.explicit ? "(Explicit)" : "(Implicit)"}</span>
+                                    </span>
+                                 </div>
+                              ))}
+                           </div>
+
+                           {/* Retrieval Bots */}
+                           <div style={{ background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "6px" }}>
+                              <strong style={{ display: "block", marginBottom: "0.5rem", color: "#94a3b8", fontSize: "0.85rem", textTransform: "uppercase" }}>Search & Retrieval Bots</strong>
+                              <p style={{ fontSize: "0.75rem", color: "#cbd5e1", marginBottom: "0.5rem", fontStyle: "italic" }}>Bots that fetch content for AI-powered search answers in real-time.</p>
+                              {Object.entries(aggregatedResults.robots.aiGovernance.bots)
+                                .filter(([_, b]) => b.type === 'Search/Retrieval')
+                                .map(([name, b]) => (
+                                 <div key={name} style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem", fontSize: "0.85rem" }}>
+                                    <span style={{ color: "#f8fafc" }}>{name}</span>
+                                    <span style={{ color: b.status === 'ALLOWED' ? "#10b981" : "#ef4444", fontWeight: "bold" }}>
+                                       {b.status} <span style={{fontSize: "0.7rem", fontWeight: "normal", color: "#64748b"}}>{b.explicit ? "(Explicit)" : "(Implicit)"}</span>
+                                    </span>
+                                 </div>
+                              ))}
+                           </div>
+                        </div>
+
+                        {/* Page Level Directives */}
+                        <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+                           <strong style={{ display: "block", marginBottom: "0.5rem", color: "#94a3b8", fontSize: "0.85rem", textTransform: "uppercase" }}>Page-Level AI Directives (Meta/Headers)</strong>
+                           <p style={{ fontSize: "0.8rem", color: "#cbd5e1", margin: 0 }}>
+                              {aggregatedResults.aiDirectivesOverride ? "⚠️ Some pages override robots.txt with strict `<meta>` tags or HTTP headers to block AI scraping." : "✅ No page-level `<meta name=\"robots\" content=\"noai\">` or `X-Robots-Tag: noai` directives were detected across the crawled pages."}
+                           </p>
+                        </div>
                       </div>
                     )}
                     {check.id === "g3" && (
