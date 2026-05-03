@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
+import zlib from 'zlib';
 
 const MAX_URLS = 50;
 
@@ -9,35 +10,72 @@ async function fetchSitemapUrls(sitemapUrl, visited = new Set(), extracted = new
 
   try {
     const res = await fetch(sitemapUrl, {
-      headers: { 'User-Agent': 'Aura-SEO-Auditor/1.0' },
+      headers: {
+        'User-Agent': 'curl/8.7.1',
+        'Accept': 'application/xml,text/xml,application/gzip,*/*'
+      },
       next: { revalidate: 0 }
     });
 
     if (!res.ok) return;
-    const xml = await res.text();
+    
+    let xml;
+    if (sitemapUrl.endsWith('.gz') || res.headers.get('content-type')?.includes('gzip')) {
+      const arrayBuffer = await res.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      xml = zlib.gunzipSync(buffer).toString('utf-8');
+    } else {
+      xml = await res.text();
+    }
     const $ = cheerio.load(xml, { xmlMode: true });
 
-    // Handle standard urlsets
-    $('urlset > url > loc').each((i, el) => {
-      if (extracted.size < MAX_URLS) {
-        let uText = $(el).text().trim();
-        try {
-          const base = targetProtocol && targetHost ? `${targetProtocol}//${targetHost}` : undefined;
-          const parsed = new URL(uText, base);
-          if (targetProtocol && targetHost) {
-            parsed.protocol = targetProtocol;
-            parsed.host = targetHost;
-          }
-          uText = parsed.toString();
-        } catch (e) {
-          // fallback if it fails
-        }
-        extracted.add(uText);
+    const locs = [];
+    $('loc, LOC').each((i, el) => {
+      const text = $(el).text().trim();
+      const parent = $(el).parent().prop('tagName')?.toLowerCase() || '';
+      if (text) {
+        locs.push({ text, parent });
       }
     });
 
+    // Fallback: Regex to catch all <loc> tags if Cheerio has any issues
+    if (locs.length === 0) {
+      const regex = /<loc>\s*(.*?)\s*<\/loc>/gi;
+      let match;
+      while ((match = regex.exec(xml)) !== null) {
+        if (match[1]) {
+          locs.push({ text: match[1].trim(), parent: match[1].toLowerCase().includes('.xml') ? 'sitemap' : 'url' });
+        }
+      }
+    }
+
+    const sitemaps = [];
+
+    for (const item of locs) {
+      const isSitemap = item.parent === 'sitemap' || item.text.toLowerCase().endsWith('.xml') || item.text.toLowerCase().includes('.xml?');
+      
+      if (isSitemap) {
+        sitemaps.push(item.text);
+      } else {
+        if (extracted.size < MAX_URLS) {
+          let uText = item.text;
+          try {
+            const base = targetProtocol && targetHost ? `${targetProtocol}//${targetHost}` : undefined;
+            const parsed = new URL(uText, base);
+            if (targetProtocol && targetHost) {
+              parsed.protocol = targetProtocol;
+              parsed.host = targetHost;
+            }
+            uText = parsed.toString();
+          } catch (e) {
+            // fallback if it fails
+          }
+          extracted.add(uText);
+        }
+      }
+    }
+
     // Handle nested sitemaps
-    const sitemaps = $('sitemapindex > sitemap > loc').map((i, el) => $(el).text().trim()).get();
     for (const nestedUrl of sitemaps) {
       if (extracted.size >= MAX_URLS) break;
       await fetchSitemapUrls(nestedUrl, visited, extracted, targetProtocol, targetHost);
