@@ -99,9 +99,28 @@ export default function Home() {
   const [gscData, setGscData] = useState(null);
   const [isCheckingGsc, setIsCheckingGsc] = useState(false);
   const [gscError, setGscError] = useState(null);
+  const [gscReady, setGscReady] = useState(false);
+
+  // Dynamically load Google Identity Services script
+  useEffect(() => {
+    if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
+      if (window.google?.accounts) setGscReady(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setGscReady(true);
+    script.onerror = () => setGscError('Failed to load Google Sign-In library.');
+    document.head.appendChild(script);
+  }, []);
 
   const handleGscSignIn = () => {
-    if (typeof window === 'undefined' || !window.google) return;
+    if (!gscReady || !window.google?.accounts?.oauth2) {
+      setGscError('Google Sign-In is not ready yet. Please wait a moment and try again.');
+      return;
+    }
     const client = window.google.accounts.oauth2.initTokenClient({
       client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
       scope: 'https://www.googleapis.com/auth/webmasters.readonly',
@@ -821,8 +840,16 @@ export default function Home() {
                         {!gscToken ? (
                           <div>
                             <p style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "1rem" }}>Connect your Google account to fetch live index status. This connection is temporary and will reset on page refresh.</p>
-                            <button onClick={handleGscSignIn} style={{ background: "#4285F4", color: "white", padding: "0.5rem 1rem", borderRadius: "4px", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "0.8rem" }}>Connect Google Search Console</button>
+                            <button
+                              onClick={handleGscSignIn}
+                              disabled={!gscReady}
+                              style={{ background: gscReady ? "#4285F4" : "#374151", color: "white", padding: "0.5rem 1rem", borderRadius: "4px", border: "none", cursor: gscReady ? "pointer" : "not-allowed", fontWeight: "bold", fontSize: "0.8rem", opacity: gscReady ? 1 : 0.6 }}
+                            >
+                              {gscReady ? "Connect Google Search Console" : "Loading Google Sign-In..."}
+                            </button>
+                            {gscError && <p style={{ color: "#ef4444", fontSize: "0.8rem", marginTop: "0.5rem" }}>Error: {gscError}</p>}
                           </div>
+
                         ) : (
                           <div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
