@@ -1,16 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]/route";
 
 export async function POST(req) {
   try {
-    const session = await getServerSession(authOptions);
+    const { url, accessToken } = await req.json();
 
-    if (!session || !session.accessToken) {
+    if (!accessToken) {
       return NextResponse.json({ error: "Unauthorized. Please connect Google Search Console." }, { status: 401 });
     }
-
-    const { url } = await req.json();
 
     if (!url) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
@@ -23,7 +19,7 @@ export async function POST(req) {
     const gscRes = await fetch("https://searchconsole.googleapis.com/v1/urlInspection/index:inspect", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${session.accessToken}`,
+        "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import { useSession, signIn, signOut } from "next-auth/react";
 import styles from "./page.module.css";
 
 const AUDIT_CHECKS = [
@@ -94,11 +93,42 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const isCancelled = useRef(false);
 
-  // GSC State
-  const { data: session } = useSession();
+  // GSC State — token lives only in memory, cleared on refresh
+  const [gscToken, setGscToken] = useState(null);
+  const [gscUser, setGscUser] = useState(null);
   const [gscData, setGscData] = useState(null);
   const [isCheckingGsc, setIsCheckingGsc] = useState(false);
   const [gscError, setGscError] = useState(null);
+
+  const handleGscSignIn = () => {
+    if (typeof window === 'undefined' || !window.google) return;
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+      scope: 'https://www.googleapis.com/auth/webmasters.readonly',
+      callback: (tokenResponse) => {
+        if (tokenResponse.error) {
+          setGscError(tokenResponse.error);
+          return;
+        }
+        setGscToken(tokenResponse.access_token);
+        // Fetch user email to display
+        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+        }).then(r => r.json()).then(info => setGscUser(info.email));
+      },
+    });
+    client.requestAccessToken({ prompt: 'consent' });
+  };
+
+  const handleGscDisconnect = () => {
+    if (gscToken && window.google) {
+      window.google.accounts.oauth2.revoke(gscToken);
+    }
+    setGscToken(null);
+    setGscUser(null);
+    setGscData(null);
+    setGscError(null);
+  };
 
   const handleAiAnalyze = async (rawData, desc) => {
     setIsAnalyzing(true);
@@ -122,17 +152,24 @@ export default function Home() {
     setIsCheckingGsc(true);
     setGscError(null);
     setGscData(null);
+
+    if (!gscToken) {
+      setGscError("No access token. Please connect Google Search Console first.");
+      setIsCheckingGsc(false);
+      return;
+    }
+
     try {
       const targetUrl = url.startsWith("http") ? url : `https://${url}`;
       const res = await fetch("/api/gsc-inspect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: targetUrl })
+        body: JSON.stringify({ url: targetUrl, accessToken: gscToken })
       });
-      
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "GSC Inspection failed");
-      
+
       setGscData(data);
     } catch (e) {
       setGscError(e.message);
@@ -781,14 +818,17 @@ export default function Home() {
                     {check.id === "g3" && (
                       <div style={{ background: "rgba(0,0,0,0.2)", padding: "1rem", borderRadius: "6px", width: "100%", marginTop: "1rem", borderLeft: "3px solid #8b5cf6" }}>
                         <strong style={{ display: "block", marginBottom: "0.5rem", color: "#a78bfa" }}>Google Search Console Integration</strong>
-                        {!session ? (
+                        {!gscToken ? (
                           <div>
-                            <p style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "1rem" }}>Connect your Google account to fetch live index status directly from Google Search Console.</p>
-                            <button onClick={() => signIn("google")} style={{ background: "#4285F4", color: "white", padding: "0.5rem 1rem", borderRadius: "4px", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "0.8rem" }}>Connect Google Search Console</button>
+                            <p style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "1rem" }}>Connect your Google account to fetch live index status. This connection is temporary and will reset on page refresh.</p>
+                            <button onClick={handleGscSignIn} style={{ background: "#4285F4", color: "white", padding: "0.5rem 1rem", borderRadius: "4px", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "0.8rem" }}>Connect Google Search Console</button>
                           </div>
                         ) : (
                           <div>
-                            <p style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "1rem" }}>Connected as {session.user?.email || "User"}.</p>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                              <p style={{ fontSize: "0.85rem", color: "#10b981", margin: 0 }}>✅ Connected as {gscUser || "your Google account"}.</p>
+                              <button onClick={handleGscDisconnect} style={{ background: "transparent", color: "#94a3b8", padding: "0.25rem 0.6rem", borderRadius: "4px", border: "1px solid #475569", cursor: "pointer", fontSize: "0.75rem" }}>Disconnect</button>
+                            </div>
                             <button onClick={handleVerifyIndexStatus} disabled={isCheckingGsc} style={{ background: "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)", color: "white", padding: "0.5rem 1rem", borderRadius: "4px", border: "none", cursor: isCheckingGsc ? "not-allowed" : "pointer", fontWeight: "bold", fontSize: "0.8rem", opacity: isCheckingGsc ? 0.7 : 1 }}>
                               {isCheckingGsc ? "Querying Google..." : "Verify Index Status for Domain"}
                             </button>

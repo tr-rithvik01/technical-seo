@@ -1,5 +1,6 @@
 import "./globals.css";
 import NextAuthProvider from "../components/NextAuthProvider";
+import Script from "next/script";
 
 export const metadata = {
   title: "Aura | Technical SEO & GEO Auditor 2026",
@@ -13,6 +14,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
+        <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
         <NextAuthProvider>{children}</NextAuthProvider>
       </body>
     </html>
