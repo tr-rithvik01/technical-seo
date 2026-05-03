@@ -3,7 +3,7 @@ import * as cheerio from 'cheerio';
 
 const MAX_URLS = 50;
 
-async function fetchSitemapUrls(sitemapUrl, visited = new Set(), extracted = new Set()) {
+async function fetchSitemapUrls(sitemapUrl, visited = new Set(), extracted = new Set(), targetProtocol, targetHost) {
   if (visited.has(sitemapUrl) || extracted.size >= MAX_URLS) return;
   visited.add(sitemapUrl);
 
@@ -20,7 +20,19 @@ async function fetchSitemapUrls(sitemapUrl, visited = new Set(), extracted = new
     // Handle standard urlsets
     $('urlset > url > loc').each((i, el) => {
       if (extracted.size < MAX_URLS) {
-        extracted.add($(el).text().trim());
+        let uText = $(el).text().trim();
+        try {
+          const base = targetProtocol && targetHost ? `${targetProtocol}//${targetHost}` : undefined;
+          const parsed = new URL(uText, base);
+          if (targetProtocol && targetHost) {
+            parsed.protocol = targetProtocol;
+            parsed.host = targetHost;
+          }
+          uText = parsed.toString();
+        } catch (e) {
+          // fallback if it fails
+        }
+        extracted.add(uText);
       }
     });
 
@@ -28,7 +40,7 @@ async function fetchSitemapUrls(sitemapUrl, visited = new Set(), extracted = new
     const sitemaps = $('sitemapindex > sitemap > loc').map((i, el) => $(el).text().trim()).get();
     for (const nestedUrl of sitemaps) {
       if (extracted.size >= MAX_URLS) break;
-      await fetchSitemapUrls(nestedUrl, visited, extracted);
+      await fetchSitemapUrls(nestedUrl, visited, extracted, targetProtocol, targetHost);
     }
   } catch (error) {
     console.error(`Error fetching sitemap ${sitemapUrl}:`, error);
@@ -77,7 +89,7 @@ export async function POST(req) {
 
     for (const sitemapUrl of sitemapUrls) {
       if (extractedSet.size >= MAX_URLS) break;
-      await fetchSitemapUrls(sitemapUrl, visitedSet, extractedSet);
+      await fetchSitemapUrls(sitemapUrl, visitedSet, extractedSet, parsedUrl.protocol, parsedUrl.host);
     }
 
     const finalUrls = Array.from(extractedSet);
