@@ -74,6 +74,8 @@ const AUDIT_CHECKS = [
   { id: "pr3", category: "Penalty Risk", name: "The site's backlink profile is not a risk." },
   { id: "pr4", category: "Penalty Risk", name: "The site is not cloaking content." },
   { id: "pr5", category: "Penalty Risk", name: "Site uses Schema appropriately to avoid structured data penalties." },
+  // Search Performance
+  { id: "gsc1", category: "Search Performance", name: "Striking Distance Keywords: Identify pages ranking positions 11–20 with high impressions for quick-win on-page and internal linking opportunities." },
 ];
 
 export default function Home() {
@@ -100,6 +102,11 @@ export default function Home() {
   const [isCheckingGsc, setIsCheckingGsc] = useState(false);
   const [gscError, setGscError] = useState(null);
   const [gscReady, setGscReady] = useState(false);
+
+  // Striking Distance State
+  const [strikingDistanceData, setStrikingDistanceData] = useState(null);
+  const [isLoadingStrikingDistance, setIsLoadingStrikingDistance] = useState(false);
+  const [strikingDistanceError, setStrikingDistanceError] = useState(null);
 
   // Dynamically load Google Identity Services script
   useEffect(() => {
@@ -165,6 +172,25 @@ export default function Home() {
       setAiAnalysis(`Error: ${e.message}`);
     }
     setIsAnalyzing(false);
+  };
+
+  const handleStrikingDistance = async () => {
+    setIsLoadingStrikingDistance(true);
+    setStrikingDistanceError(null);
+    try {
+      const targetUrl = url.startsWith("http") ? url : `https://${url}`;
+      const res = await fetch("/api/gsc-striking-distance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteUrl: targetUrl, accessToken: gscToken })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch striking distance keywords");
+      setStrikingDistanceData(data);
+    } catch (e) {
+      setStrikingDistanceError(e.message);
+    }
+    setIsLoadingStrikingDistance(false);
   };
 
   const handleVerifyIndexStatus = async () => {
@@ -596,7 +622,22 @@ export default function Home() {
                 if (check.id === "c18" && aggregatedResults.h1ErrorRate > 0.2) { pass = false; desc = `${Math.round(aggregatedResults.h1ErrorRate * 100)}% of pages have H1 hierarchy issues.`; }
                 if (check.id === "pr5" && aggregatedResults.schemaRate < 0.5) { pass = false; desc = "JSON-LD Entity Schema is missing on majority of pages."; }
                 if (check.id === "c11" && aggregatedResults.pagesWith404 > 0) { pass = false; desc = `Found ${aggregatedResults.pagesWith404} pages returning 404 in sitemap.`; }
-                
+                if (check.id === "gsc1") {
+                  if (!gscToken) {
+                    pass = false;
+                    desc = "Connect Google Search Console to identify striking distance keywords.";
+                  } else if (!strikingDistanceData) {
+                    pass = false;
+                    desc = "Run the striking distance analysis to find quick-win ranking opportunities.";
+                  } else if (strikingDistanceData.totalFound === 0) {
+                    pass = true;
+                    desc = "No keywords found in positions 11–20. Your pages are either on page one or need broader content work.";
+                  } else {
+                    pass = false;
+                    desc = `${strikingDistanceData.totalFound} keywords found in positions 11–20 with high impressions — quick-win opportunities for page one.`;
+                  }
+                }
+
                 // Simulated logic for other checks to populate the UI
                 if (pass && check.id !== "g1" && (index === 15 || index === 25 || index === 33)) {
                   pass = false; 
@@ -832,6 +873,81 @@ export default function Home() {
                               {aggregatedResults.aiDirectivesOverride ? "⚠️ Some pages override robots.txt with strict `<meta>` tags or HTTP headers to block AI scraping." : "✅ No page-level `<meta name=\"robots\" content=\"noai\">` or `X-Robots-Tag: noai` directives were detected across the crawled pages."}
                            </p>
                         </div>
+                      </div>
+                    )}
+                    {check.id === "gsc1" && (
+                      <div style={{ background: "rgba(0,0,0,0.2)", padding: "1rem", borderRadius: "6px", width: "100%", marginTop: "1rem", borderLeft: "3px solid #f59e0b" }}>
+                        <strong style={{ display: "block", marginBottom: "0.5rem", color: "#fbbf24" }}>Striking Distance Keyword Finder</strong>
+                        {!gscToken ? (
+                          <div>
+                            <p style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "1rem" }}>Connect Google Search Console to pull keywords ranking in positions 11–20 with high impressions. Minor on-page tweaks or internal links on these pages can move them to page one.</p>
+                            <button
+                              onClick={handleGscSignIn}
+                              disabled={!gscReady}
+                              style={{ background: gscReady ? "#4285F4" : "#374151", color: "white", padding: "0.5rem 1rem", borderRadius: "4px", border: "none", cursor: gscReady ? "pointer" : "not-allowed", fontWeight: "bold", fontSize: "0.8rem", opacity: gscReady ? 1 : 0.6 }}
+                            >
+                              {gscReady ? "Connect Google Search Console" : "Loading Google Sign-In..."}
+                            </button>
+                            {gscError && <p style={{ color: "#ef4444", fontSize: "0.8rem", marginTop: "0.5rem" }}>Error: {gscError}</p>}
+                          </div>
+                        ) : (
+                          <div>
+                            <p style={{ fontSize: "0.85rem", color: "#10b981", marginBottom: "1rem" }}>✅ Connected as {gscUser || "your Google account"}. Fetches the last 90 days of Search Analytics data.</p>
+                            <button
+                              onClick={handleStrikingDistance}
+                              disabled={isLoadingStrikingDistance}
+                              style={{ background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", color: "white", padding: "0.5rem 1rem", borderRadius: "4px", border: "none", cursor: isLoadingStrikingDistance ? "not-allowed" : "pointer", fontWeight: "bold", fontSize: "0.8rem", opacity: isLoadingStrikingDistance ? 0.7 : 1 }}
+                            >
+                              {isLoadingStrikingDistance ? "Querying GSC..." : "Find Striking Distance Keywords"}
+                            </button>
+                            {strikingDistanceError && <p style={{ color: "#ef4444", fontSize: "0.8rem", marginTop: "0.5rem" }}>Error: {strikingDistanceError}</p>}
+                            {strikingDistanceData && (
+                              <div style={{ marginTop: "1.5rem" }}>
+                                <div style={{ background: "rgba(245,158,11,0.1)", borderLeft: "3px solid #f59e0b", padding: "1rem", borderRadius: "6px", marginBottom: "1rem", fontSize: "0.85rem", lineHeight: "1.6" }}>
+                                  <strong style={{ color: "#fbbf24", display: "block", marginBottom: "0.5rem" }}>What is a Striking Distance Keyword?</strong>
+                                  <p style={{ margin: 0 }}>These are queries where your pages already rank on page two (positions 11–20). They receive meaningful impressions, meaning users are searching for them — but your page isn't visible enough to earn clicks. A targeted title tag update, internal link, or content expansion is often enough to break into page one.</p>
+                                </div>
+                                {strikingDistanceData.totalFound === 0 ? (
+                                  <p style={{ fontSize: "0.85rem", color: "#10b981" }}>No keywords found in the 11–20 range for the last 90 days.</p>
+                                ) : (
+                                  <div>
+                                    <p style={{ fontSize: "0.85rem", color: "#fbbf24", marginBottom: "0.75rem", fontWeight: "bold" }}>
+                                      {strikingDistanceData.totalFound} Opportunities Found — sorted by impressions
+                                    </p>
+                                    <div style={{ maxHeight: "400px", overflowY: "auto", background: "rgba(255,255,255,0.03)", borderRadius: "6px" }}>
+                                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+                                        <thead style={{ position: "sticky", top: 0, background: "#1e293b", zIndex: 1 }}>
+                                          <tr style={{ textAlign: "left" }}>
+                                            <th style={{ padding: "0.6rem 0.75rem", color: "#94a3b8", fontWeight: 600 }}>Keyword</th>
+                                            <th style={{ padding: "0.6rem 0.75rem", color: "#94a3b8", fontWeight: 600, width: "80px" }}>Pos.</th>
+                                            <th style={{ padding: "0.6rem 0.75rem", color: "#94a3b8", fontWeight: 600, width: "90px" }}>Impress.</th>
+                                            <th style={{ padding: "0.6rem 0.75rem", color: "#94a3b8", fontWeight: 600, width: "70px" }}>Clicks</th>
+                                            <th style={{ padding: "0.6rem 0.75rem", color: "#94a3b8", fontWeight: 600, width: "60px" }}>CTR</th>
+                                            <th style={{ padding: "0.6rem 0.75rem", color: "#94a3b8", fontWeight: 600 }}>Landing Page</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {strikingDistanceData.keywords.map((kw, i) => (
+                                            <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
+                                              <td style={{ padding: "0.6rem 0.75rem", color: "#f8fafc", fontWeight: 500 }}>{kw.query}</td>
+                                              <td style={{ padding: "0.6rem 0.75rem", textAlign: "center" }}>
+                                                <span style={{ background: "rgba(245,158,11,0.2)", color: "#fbbf24", padding: "0.15rem 0.4rem", borderRadius: "4px", fontWeight: "bold", fontSize: "0.75rem" }}>{kw.position}</span>
+                                              </td>
+                                              <td style={{ padding: "0.6rem 0.75rem", color: "#38bdf8", fontWeight: 600, textAlign: "center" }}>{kw.impressions.toLocaleString()}</td>
+                                              <td style={{ padding: "0.6rem 0.75rem", color: "#94a3b8", textAlign: "center" }}>{kw.clicks.toLocaleString()}</td>
+                                              <td style={{ padding: "0.6rem 0.75rem", color: "#94a3b8", textAlign: "center" }}>{kw.ctr}%</td>
+                                              <td style={{ padding: "0.6rem 0.75rem", color: "#64748b", wordBreak: "break-all", fontSize: "0.75rem" }}>{kw.page}</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                     {check.id === "g3" && (
